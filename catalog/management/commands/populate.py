@@ -59,7 +59,7 @@ class Command(BaseCommand):
         self.MAXAUTHORSPERBOOK = 3
         self.NUMBERCOMMENTS = 40
         self.MAXCOPIESSTOCK = 30
-        self.NUMBEROFVOTES = 150
+        self.NUMBEROFVOTES = 200 # Pongo este valor por si acaso se pisan muchas valoraciones
         self.cleanDataBase()   # clean database
         # The faker.Faker() creates and initializes a faker generator,
         self.faker = Faker()
