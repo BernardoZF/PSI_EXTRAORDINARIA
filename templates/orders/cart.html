@@ -1,0 +1,61 @@
+{% extends "base_generic.html" %}
+
+{% block content %}
+<div class="pages">
+    <div class="book_title">
+        <h1>Cart</h1>
+    </div>
+
+
+    {% if cart|length > 0 %}
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Title</th>
+                    <th scope="col">Price</th>
+                    <th scope="col">Quantity</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in cart_list.items %}
+                    <tr>
+                        <td>{{ value.title }}</td>
+                        <td>{{ value.price }}€</td>
+                        <td>{{ value.quantity }}</td>
+                        <td><a href="{% url 'cart_remove' value.slug %}">Remove</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="checkout">
+            <p><strong>&nbsp;Total:</strong> {{ cart.get_total_price }}€</p>
+        </div>
+        
+        <div class="checkout">
+            
+            <form action="{% url 'order_create' %}" method="post">
+                {% csrf_token %}
+                <button class="button button1" type="submit">Checkout</button>&nbsp;&nbsp;&nbsp;&nbsp;
+            </form>
+            <form action="{% url 'cart_clear' %}" method="get">
+                {% csrf_token %}
+                <button class="button buttongrey" type="submit">Clear cart</button>
+            </form>
+
+            <div class="shopping">
+                <a href="{% url 'home' %}">Continue Shopping</a>
+            </div>
+        </div>
+    {% else %}
+        <div class="book_info">
+            <p>Your cart is empty :(</p>
+        </div>
+        
+    {% endif %}
+
+    
+</div>
+    
+{% endblock %}

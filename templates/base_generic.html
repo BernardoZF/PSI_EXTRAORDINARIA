@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+   
+   {% load static %}
+   <head>
+      <title>
+         {% block title %} BookShop {% endblock %}
+      </title>
+
+      <link rel="stylesheet"  href="{%  static 'css/style.css' %}">
+   </head>
+   <body>
+      {% block header %} 
+      <div class= "navbar">
+         <a href="{% url 'home' %}" class="active">Home</a>
+
+         <a href="{% url 'books' %}">Books</a>
+
+         <div class="search-container">
+            <form action="{% url 'search' %}" method="get">
+              <input name="q" type="text" placeholder="Search.." name="search">
+            </form>
+         </div>
+
+         {% if user.is_authenticated %}
+            <a class="right active"><strong>{{ user.username }}</strong></a>
+            <a href="{% url 'logout' %}" class="right">Logout</a>
+
+            {% if cart|length > 0 %}
+               <a href="{% url 'cart_list' %}" class="right"> Your cart: <strong>{{ cart.get_number_items }}</strong> items, <strong>{{ cart.get_total_price }}€</strong></a> <!--Esto es placeholder-->
+            {% else %}
+               <a href="{% url 'cart_list' %}" class="right"> Empty cart</a>
+            {% endif %}
+            
+         {% else %}
+            <a href="{% url 'login' %}?next={{request.path}}" class="right">Login</a>
+            <a href="{% url 'signup' %}?next={{request.path}}" class="right">Signup</a>
+         {% endif %}
+      </div>
+      {% endblock %}
+
+      {% block pagination %}
+      {% if is_paginated %}
+         <div class="pagination center_text background">
+         <span class="page-links">
+         {% if page_obj.has_previous %}
+            <a href="{{ request.path }}?page={{ page_obj.previous_page_number }}&q={{ result }}">←</a>
+         {% endif %}
+         <span class="page-current">
+         Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+         </span>
+         {% if page_obj.has_next %}
+         <a href="{{ request.path }}?page={{ page_obj.next_page_number }}&q={{ result }}">→</a>
+         {% endif %}
+         </span>
+         </div>
+      {% endif %}
+      {% endblock %}
+
+      <div class= "body">
+         {% block content %}
+         <!-- main block -->
+      
+         {% endblock %}
+      </div>
+      
+      {% block footer %} 
+      
+      <div class="footer">
+         <p>Creado por Luis Miguel Nucifora y Bernardo Andr&eacute;s Zambrano</p>
+      </div>
+      {% endblock %}
+   </body>
+</html>
+<!-- Ejemplo de fichero base.html. 
+Esto es solo un ejemplo para empezar a trabajar, 
+se espera que lo modifiquéis tanto como sea necesario. --> 

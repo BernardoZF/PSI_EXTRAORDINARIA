@@ -1,0 +1,72 @@
+{% extends 'base_generic.html' %}
+{% block title %}
+   Home
+{% endblock %}
+
+{% load static %}
+{% block content %}
+
+{% if score_order %}
+<div class="center_text">
+  <ul id="book_list">
+    <div class="center_text">
+      <h2>Top books</h2>  
+    </div>
+    
+    {% for book in score_order %}
+    <li>
+      <a href="{{ book.get_absolute_url }}"><img src = "{% static book.path_to_cover_image %}"></a>
+      <div class="book_list_caption">
+        <strong>{{ book.score }}</strong>
+      </div>
+    </li>
+    {% endfor %}
+  
+  </ul>
+</div>
+
+{% else %}
+  <p>There are no books in the library.</p>
+{% endif %}
+
+{% if date_order %}
+<div class="center_text">
+  <ul id="book_list">
+    <div class="center_text">
+      <h2>New releases</h2>
+    </div>  
+    {% for book in date_order %}
+    <li>
+      <a href="{{ book.get_absolute_url }}"><img src = "{% static book.path_to_cover_image %}"></a>
+      <div class="book_list_caption">
+        <strong>{{ book.date }}</strong>
+      </div>
+    </li>
+    {% endfor %}
+  
+  </ul>
+</div>
+
+{% if vote_order %}
+<div class="center_text">
+  <ul id="book_list">
+    <div class="center_text">
+      <h2>Most voted</h2>
+    </div>  
+    {% for book in vote_order %}
+    <li>
+      <a href="{{ book.get_absolute_url }}"><img src = "{% static book.path_to_cover_image %}"></a>
+      <div class="book_list_caption">
+        <strong>{{ book.n_votes }}</strong>
+      </div>
+    </li>
+    {% endfor %}
+  
+  </ul>
+</div>
+{% endif %}
+
+{% else %}
+  <p>There are no books in the library.</p>
+{% endif %}
+{% endblock content %}

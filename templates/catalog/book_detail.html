@@ -1,0 +1,67 @@
+{% extends "base_generic.html" %}
+
+{% load static %}
+
+{% block content %}
+  <div class="book_title">
+    <h1>{{ book.title }}</h1>
+  </div>
+  
+  <div class="book_detail">
+    
+
+    <div class="book_image">
+      <p><img src = "{% static book.path_to_cover_image %}" alt="{{ book.path_to_cover_image }}"></p>
+    </div>
+    
+    <div class="book_info">    
+      <p><strong>Author/s:</strong> {% for author in book.author.all %} {{ author }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
+      <br>
+      <p><strong>Release date:</strong> {{ book.date }}</p>
+    </div> 
+
+    <hr>
+    
+    <div class="book_cart">
+
+      <p><strong>Price:</strong> {{ book.price }} €</p>
+      <br>
+      {% if user.is_authenticated %}
+        <form action="{% url 'cart_add' book.slug %}?next={{request.path}}" method="post">
+          {% csrf_token %}
+          <button class="button button1" type="submit">Add to Cart </button>
+          <input type="number" id="quantity" name="quantity" min="1" max="20" value="1" style="width: 40px;"> 
+        </form>
+
+        <form action="{% url 'UserVote' book.slug %}?next={{request.path}}" method="post">
+          {% csrf_token %}
+          <button class="button button1" type="submit">Vote</button>
+          <input type="number" id="rate" name="rate" min="0" max="10" value="0" style="width: 40px;">
+        </form>
+
+      {% endif %}
+      
+    </div>
+  </div>
+
+  <div class="book_comment_section">
+    <br>
+    <h3>Comments:</h3> 
+  </div>
+
+  <hr>
+
+  <div class="book_comments">
+    {% for com in book.comment_set.all %} 
+      <p><strong>{{ com.user }}</strong> | {{ com.date }}</p>
+      <div class="book_comment_content">
+        <p>{{ com.msg }}</p>
+      </div>
+      <br>
+    
+    {% endfor %}
+  </div>
+  
+  
+  
+{% endblock %}
