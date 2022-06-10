@@ -18,6 +18,8 @@
       <p><strong>Author/s:</strong> {% for author in book.author.all %} {{ author }}{% if not forloop.last %}, {% endif %}{% endfor %}</p>
       <br>
       <p><strong>Release date:</strong> {{ book.date }}</p>
+      <br>
+      <p><strong>Score:</strong> {{book.score}}</p>
     </div> 
 
     <hr>
