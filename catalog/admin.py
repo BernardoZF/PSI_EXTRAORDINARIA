@@ -45,10 +45,7 @@ class CommentAdmin(admin.ModelAdmin):
     inLines = [BooksInline]
 
 
-
 admin.site.register(Comment, CommentAdmin)
-
-
 
 
 admin.site.register(Vote)
