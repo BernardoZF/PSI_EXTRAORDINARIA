@@ -5,7 +5,7 @@ export PGCLIENTENCODING := LATIN9
 export PGHOST := localhost
 export DJANGOPORT = 8001
 # you must update the value of HEROKUHOST
-export HEROKUHOST := git:remote protected-bastion-43256
+export HEROKUHOST := git:remote psiextraordinaria
 PSQL = psql
 CMD = python3 manage.py
 HEROKU = heroku run export SQLITE=1 &
@@ -81,10 +81,10 @@ test_orders_models:
 #test_query_heroku:
 #	$(HEROKU) python3 test_query.py
 #
-#config_heroku:
-#	heroku login
-#	heroku $HEROKUHOST
-#
+config_heroku:
+	heroku login
+	heroku $(HEROKUHOST)
+
 heroku_push:
 	git push heroku master
 

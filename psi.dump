@@ -253,8 +253,9 @@ CREATE TABLE public.catalog_book (
     price numeric(10,2) NOT NULL,
     number_copies_stock integer NOT NULL,
     date date,
+    slug character varying(50) NOT NULL,
     score numeric(4,2) NOT NULL,
-    slug character varying(50) NOT NULL
+    n_votes integer NOT NULL
 );
 
 
@@ -337,6 +338,37 @@ CREATE SEQUENCE public.catalog_comment_id_seq
 --
 
 ALTER SEQUENCE public.catalog_comment_id_seq OWNED BY public.catalog_comment.id;
+
+
+--
+-- Name: catalog_vote; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.catalog_vote (
+    id bigint NOT NULL,
+    rate integer NOT NULL,
+    book_id bigint,
+    user_id integer
+);
+
+
+--
+-- Name: catalog_vote_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.catalog_vote_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: catalog_vote_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.catalog_vote_id_seq OWNED BY public.catalog_vote.id;
 
 
 --
@@ -589,6 +621,13 @@ ALTER TABLE ONLY public.catalog_comment ALTER COLUMN id SET DEFAULT nextval('pub
 
 
 --
+-- Name: catalog_vote id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_vote ALTER COLUMN id SET DEFAULT nextval('public.catalog_vote_id_seq'::regclass);
+
+
+--
 -- Name: django_admin_log id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -680,14 +719,18 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 34	Can change comment	9	change_comment
 35	Can delete comment	9	delete_comment
 36	Can view comment	9	view_comment
-37	Can add order	10	add_order
-38	Can change order	10	change_order
-39	Can delete order	10	delete_order
-40	Can view order	10	view_order
-41	Can add order item	11	add_orderitem
-42	Can change order item	11	change_orderitem
-43	Can delete order item	11	delete_orderitem
-44	Can view order item	11	view_orderitem
+37	Can add vote	10	add_vote
+38	Can change vote	10	change_vote
+39	Can delete vote	10	delete_vote
+40	Can view vote	10	view_vote
+41	Can add order	11	add_order
+42	Can change order	11	change_order
+43	Can delete order	11	delete_order
+44	Can view order	11	view_order
+45	Can add order item	12	add_orderitem
+46	Can change order item	12	change_orderitem
+47	Can delete order item	12	delete_orderitem
+48	Can view order item	12	view_orderitem
 \.
 
 
@@ -696,26 +739,27 @@ COPY public.auth_permission (id, name, content_type_id, codename) FROM stdin;
 --
 
 COPY public.auth_user (id, password, last_login, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) FROM stdin;
-2	9fd0aa5ac08100abe795aaebebe67d82d7ebc0fff465ea3ea3a5bf32a1426c1b	\N	f	Patrick Davis	Nancy	Fowler	jordanrachel@example.net	f	t	2021-12-21 20:59:03.358428+01
-3	c96886f10479a5e08be218ea955abe144dd5fae3c3e34e4542d1818788d23bcc	\N	f	Bonnie Snyder	Edward	Morales	whitepamela@example.org	f	t	2021-12-21 20:59:03.369455+01
-4	adb52f0a91c0617d12bfc3bb762315cca67acc82ecce78c612951e1c8c61ba36	\N	f	Isaac Fox	Jeremy	James	edennis@example.org	f	t	2021-12-21 20:59:03.377683+01
-5	fd51842a6829d7334e9e0f8309f1c0a1bd980fe93be3091174c5aa9e39a3a5be	\N	f	Colleen Smith	Lawrence	Newman	christine22@example.com	f	t	2021-12-21 20:59:03.386025+01
-6	564976788e06f7cad6fd267ecdce690581e5d632dbe6dc30e3823a827825ea6a	\N	f	Kevin Beck	Jessica	Cruz	thomas43@example.com	f	t	2021-12-21 20:59:03.394374+01
-7	2475437a880c8fb409bc11f0963e171b741cdd281c1fd386141ede17b8d77c4c	\N	f	Hannah Meyer	Hannah	Rowe	kevinjohnson@example.com	f	t	2021-12-21 20:59:03.402727+01
-8	4b61dca163b6a6c221ea988ea4fec20ace945d1c3cc1eb48447da30f77947cbb	\N	f	Alyssa Lewis	Jessica	Myers	tina16@example.org	f	t	2021-12-21 20:59:03.411046+01
-9	8ce02d4bc6c3ed6b2c268eafaf789f6a7f28a63d02a339f14e7e7294aff0b36f	\N	f	Jacqueline Rodriguez	Kyle	Martinez	carlsonmichele@example.net	f	t	2021-12-21 20:59:03.41954+01
-10	3a59979a5b32732e264d3860c16b405299c15c806e3b586274c752fca9e8a67c	\N	f	Joseph Sims	Tommy	Rodriguez	marynguyen@example.net	f	t	2021-12-21 20:59:03.427721+01
-11	c28b86d39a9c933e04f7fa0b7f08f882fc5c86de0c066c3c3be5c168f1158997	\N	f	Robert Malone	Christopher	Scott	ashleyferrell@example.net	f	t	2021-12-21 20:59:03.436141+01
-12	0f1a66c82ac749df74aee3ac6a85c9402a97178ad059607efc855628f81e4ea4	\N	f	Jordan Mejia	Eric	Ross	ashley33@example.com	f	t	2021-12-21 20:59:03.444481+01
-13	8abf73edb930907eea0fd420364a811312f8ab377be13fbb5684162aff50c88e	\N	f	Michael Jones	Charles	Craig	bbrown@example.com	f	t	2021-12-21 20:59:03.452801+01
-14	e8bdb4d641e301214cc33bd3f7056e3f7520575613feb77d3b48e4c7ee029e0d	\N	f	James Solomon	Alison	Santos	nicole83@example.org	f	t	2021-12-21 20:59:03.461071+01
-15	96c84fcf20eda76e86a2f36f195be7add7c235a2a4e2278cc47dcddd849e98b0	\N	f	Laura Byrd	Haley	Skinner	melissadoyle@example.net	f	t	2021-12-21 20:59:03.469467+01
-16	d4ac3d0e45905b3fb63240949d07c4eb3c8ae25998a6489205cf88342f0d9edc	\N	f	Candice Wagner	Patricia	Fisher	owenyolanda@example.com	f	t	2021-12-21 20:59:03.477925+01
-17	610b62c4c9ae24704d158a421d548ee1ebfbb0272fe88f63eaee82608827427a	\N	f	Melissa Cross	James	Fitzgerald	jenniferlong@example.net	f	t	2021-12-21 20:59:03.486142+01
-18	0e79ecf3afceec67910f551cd19b9699463a0300b16161da4f6b28dca9b2158e	\N	f	Katherine Wong	Michelle	Gonzalez	michelle37@example.org	f	t	2021-12-21 20:59:03.49443+01
-19	197d3f1d9c95507a577a0d2c4e92969314f86fa078059a452a45a913db2e2589	\N	f	Eric Smith	Patty	Hickman	stephaniesmith@example.com	f	t	2021-12-21 20:59:03.502842+01
-20	068203c5971512317bd7245ba0d7261e6f95feaa1528d3b534f48a844b53c587	\N	f	Claire Martinez	Sherry	Jones	stewartscott@example.org	f	t	2021-12-21 20:59:03.511175+01
-21	67037bc06b530afa02389967f0583ffb6ae9e5224262ef842432f94949a06b66	\N	f	Kimberly Cruz	Richard	Williams	haasalexis@example.com	f	t	2021-12-21 20:59:03.519512+01
+2	d589ffbd379c9530df3612a30da3997ea05529a9116955581f9dcc854423b86a	\N	f	Gary Wilson	Kimberly	Taylor	james53@yahoo.com	f	t	2022-06-10 21:17:55.713065+02
+3	dbc23b9dd0d59fcb83ac969bd8e936b4ebddda40bc2380ea86e0bfa38242fc73	\N	f	Monica Jones	Karen	Johnson	butlerjennifer@miller-bates.com	f	t	2022-06-10 21:17:55.715148+02
+4	fbb67644327218da12390762811752969bc995ed8fc9e21251cfa94a80c2a66f	\N	f	Jason Anderson	Michael	Rodriguez	silvajoshua@yahoo.com	f	t	2022-06-10 21:17:55.716764+02
+5	7aa91fb1563725f56661dfad5178c9862c3641f0fedaae3b3956cfa097885bfd	\N	f	Katrina Skinner	Jennifer	Soto	anthony28@sanchez.biz	f	t	2022-06-10 21:17:55.718123+02
+6	af051d0bad279b27874871e15a60e9e1617c5585c12b9eda406bc8ce51f0d9c5	\N	f	Jeanette Smith	James	Sampson	ltyler@osborne.org	f	t	2022-06-10 21:17:55.719583+02
+7	71b61f0d4a3a860668d60b015ead1d1a4173beca81d39e12a15f6872521ba318	\N	f	Christopher Merritt	Lindsay	Lucas	alexis31@ramirez.com	f	t	2022-06-10 21:17:55.720937+02
+8	c93f8d39a68b12d21670c6bc0a676d4ec348908c151854d0fd5e1a7ac572a3fb	\N	f	Joseph Johnson	Joseph	Bishop	wharris@yahoo.com	f	t	2022-06-10 21:17:55.722156+02
+9	208db85cf2f7a5cb8c34f17ea0870b99985f030ba3bf4d803f5defcf5619694f	\N	f	Stephen Clark	Mary	Robinson	thompsonjames@johnson-williams.com	f	t	2022-06-10 21:17:55.723548+02
+10	1574f95750025b656d1d67fe5a61d2995e547b12965f5751d0d3a2fed51a489b	\N	f	Joshua Joyce	Chase	Cooper	deborahcohen@yahoo.com	f	t	2022-06-10 21:17:55.724793+02
+11	71e031a35029ee3ab1a44ce5419b8dd98cc8c532974aac78ff10b97f791fe790	\N	f	David May	Michelle	Smith	russell81@gmail.com	f	t	2022-06-10 21:17:55.725962+02
+12	5e75ac8713e6cd30a86dbcdc8ffd19fee3fa0087a12fecdb0c480ad4305ddca1	\N	f	Joyce Nelson	Kenneth	Murphy	duncantraci@miller.net	f	t	2022-06-10 21:17:55.727259+02
+13	2b40b00a687e22a734fdbc031e834018fb4e7db430c117d2e80dfd7787c8173e	\N	f	Ashley Martin	Tiffany	Poole	andrew99@thompson.com	f	t	2022-06-10 21:17:55.728614+02
+14	a32d7f34a5640c563ea52e409182a335dedc689ca8ca6504939c1accfb5f23f9	\N	f	James Dickson	Jacqueline	Carter	lcross@yahoo.com	f	t	2022-06-10 21:17:55.729801+02
+15	08306e74c79bf35daed649345af8ebd96c558213a3b04d6c25a5df236a3d90ae	\N	f	Kristin Marquez	Julie	Taylor	laurengiles@davis-newton.com	f	t	2022-06-10 21:17:55.731043+02
+16	3a9e348b381dc6121c4aa368f79ed3d232668ce0df4949c9456d21dfbccf40a0	\N	f	Corey Garcia	Sean	Baker	terrellamanda@cooper.biz	f	t	2022-06-10 21:17:55.732484+02
+17	649fda0e0e1886a64ea75e53647a907f5cce0fa480a8800de04b3ae4148bc9ca	\N	f	Nicholas Richardson	Daniel	Swanson	omiller@hotmail.com	f	t	2022-06-10 21:17:55.733669+02
+18	8fc244cbe335b700bbd1c5011573ad18e92d0c1f3f8a8d250ccd407bd246f75d	\N	f	Daniel Camacho	Kelly	Holmes	tonywhite@stewart-boone.com	f	t	2022-06-10 21:17:55.734904+02
+19	eb54db060040e7bdd3417107babb17c19bb6558cff213756a49bf9ce5563c5c2	\N	f	Kathleen Schmitt	Cynthia	Haas	uobrien@gmail.com	f	t	2022-06-10 21:17:55.736001+02
+20	1f1f3425e960cace702f8ce69a4d6026f0f089b9f9c535f5605fa68d7461dddc	\N	f	Levi Mccall	Brandon	Washington	tonya24@yahoo.com	f	t	2022-06-10 21:17:55.737157+02
+21	cdb5660e336a705376e818fce379459cba5770cf92292cf19d86c4ebe15aeef1	\N	f	Bethany Jenkins	Jeffrey	Griffith	jennifer18@walker-green.com	f	t	2022-06-10 21:17:55.738445+02
+22	pbkdf2_sha256$260000$DUsI3rKaM2gTN0hsMhcTkq$zyaQ/YalkNyQ2eJBkxwEfgjjk3YZ7hNX3mcGUYl5Hjg=	\N	t	alumnodb			admin@myproject.com	t	t	2022-06-10 21:18:03.661653+02
 \.
 
 
@@ -740,16 +784,16 @@ COPY public.auth_user_user_permissions (id, user_id, permission_id) FROM stdin;
 --
 
 COPY public.catalog_author (id, first_name, last_name) FROM stdin;
-1	Brenda	Knight
-2	Becky	Boyd
-3	Joshua	Jackson
-4	Daniel	Cook
-5	Sherri	Preston
-6	Whitney	Smith
-7	Jill	Frost
-8	Joseph	Bishop
-9	Joseph	Webb
-10	Michelle	Hernandez
+1	Nicole	Harper
+2	Susan	Snow
+3	Tonya	Cole
+4	Eric	Young
+5	Sara	Curry
+6	Courtney	Palmer
+7	Laurie	Spencer
+8	Lorraine	Gill
+9	Jasmine	Collins
+10	Brittney	Sanchez
 \.
 
 
@@ -757,37 +801,37 @@ COPY public.catalog_author (id, first_name, last_name) FROM stdin;
 -- Data for Name: catalog_book; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-COPY public.catalog_book (path_to_cover_image, id, isbn, title, price, number_copies_stock, date, score, slug) FROM stdin;
-covers/street-1.png	1	2783457949150	Street	9.49	7579	1982-12-09	6.51	street-1
-covers/despite-2.png	2	8328542367876	Despite	4.27	8387	1971-10-18	8.07	despite-2
-covers/only-17.png	17	0286533952438	Only	3.14	5133	2017-04-04	6.33	only-17
-covers/skill-3.png	3	7508287282530	Skill	5.27	4468	2009-07-25	2.96	skill-3
-covers/some-4.png	4	3233390160999	Some	6.44	4660	1980-04-25	8.77	some-4
-covers/gas-5.png	5	5380687685667	Gas	9.67	1273	1993-01-01	6.86	gas-5
-covers/girl-6.png	6	4644911253672	Girl	8.94	4371	1975-11-10	8.45	girl-6
-covers/risk-18.png	18	8655757089498	Risk	3.12	547	2016-08-16	1.51	risk-18
-covers/worry-7.png	7	8919032677660	Worry	6.36	5508	1979-11-10	1.26	worry-7
-covers/tough-8.png	8	9091170439729	Tough	6.71	8279	1997-08-03	4.54	tough-8
-covers/vote-9.png	9	3660154082691	Vote	4.53	3291	2013-07-07	7.03	vote-9
-covers/defense-29.png	29	9980812700887	Defense	7.98	465	1975-09-26	6.02	defense-29
-covers/anything-10.png	10	6975793356768	Anything	9.32	6694	1973-11-16	2.39	anything-10
-covers/trip-19.png	19	2008601513099	Trip	4.36	350	1984-08-02	4.55	trip-19
-covers/produce-11.png	11	7683903320207	Produce	3.11	3603	2007-05-01	5.18	produce-11
-covers/throw-12.png	12	0216131094187	Throw	3.93	4309	2006-06-22	4.93	throw-12
-covers/move-13.png	13	2879496636749	Move	4.03	3392	2004-09-10	2.30	move-13
-covers/these-14.png	14	4019783406802	These	1.61	8915	1975-02-12	2.93	these-14
-covers/piece-20.png	20	8588241794852	Piece	2.39	7678	2001-09-12	1.90	piece-20
-covers/strategy-15.png	15	1357879920901	Strategy	6.53	4048	1980-09-15	9.86	strategy-15
-covers/hear-16.png	16	2935164697156	Hear	1.14	1776	1990-04-07	1.33	hear-16
-covers/worker-21.png	21	6393186223775	Worker	4.80	6718	2019-02-13	1.10	worker-21
-covers/take-22.png	22	5134951418806	Take	4.04	5616	1998-06-01	6.82	take-22
-covers/point-30.png	30	6981659892436	Point	6.88	4975	1993-01-27	9.98	point-30
-covers/scene-23.png	23	7797084767447	Scene	7.35	2101	2001-05-22	5.05	scene-23
-covers/talk-24.png	24	7432337922245	Talk	6.49	1525	2020-03-30	8.54	talk-24
-covers/class-25.png	25	8969492932668	Class	8.10	6181	2012-05-08	8.55	class-25
-covers/kid-26.png	26	9677354686572	Kid	2.19	5683	2008-01-13	2.81	kid-26
-covers/home-27.png	27	4406230699010	Home	2.82	5296	2009-05-23	6.89	home-27
-covers/above-28.png	28	8338300492584	Above	5.01	4965	2014-05-03	2.16	above-28
+COPY public.catalog_book (path_to_cover_image, id, isbn, title, price, number_copies_stock, date, slug, score, n_votes) FROM stdin;
+covers/hard-5.png	5	6503813769746	Hard	8.32	2473	2015-04-17	hard-5	1.50	2
+covers/out-2.png	2	2590355914820	Out	5.20	8911	2019-11-10	out-2	7.00	4
+covers/pressure-1.png	1	4612469886653	Pressure	1.08	6040	2008-06-24	pressure-1	5.25	8
+covers/scene-21.png	21	7582719808693	Scene	1.65	8084	2009-10-21	scene-21	3.43	7
+covers/determine-3.png	3	1934133597297	Determine	7.06	4508	1998-04-16	determine-3	6.40	5
+covers/be-17.png	17	2484156545388	Be	4.58	9873	2000-08-02	be-17	7.00	7
+covers/data-6.png	6	5273557477553	Data	6.83	6748	1981-06-02	data-6	4.80	5
+covers/order-18.png	18	1031344341107	Order	4.07	2341	1981-06-12	order-18	3.25	4
+covers/them-28.png	28	9835395609907	Them	5.50	9127	2021-10-28	them-28	5.20	5
+covers/send-13.png	13	3672649731735	Send	3.31	5329	1993-12-13	send-13	4.29	7
+covers/painting-7.png	7	1589491218792	Painting	2.37	4475	2005-06-28	painting-7	4.00	6
+covers/treat-20.png	20	3095629134056	Treat	5.39	7562	2005-12-21	treat-20	5.57	7
+covers/prepare-11.png	11	6149554625566	Prepare	8.37	1162	1975-07-20	prepare-11	6.00	6
+covers/may-26.png	26	7869134198876	May	1.09	6053	1987-04-09	may-26	3.17	6
+covers/imagine-10.png	10	4921802312816	Imagine	3.55	4777	1996-05-02	imagine-10	5.83	6
+covers/condition-22.png	22	0148970902027	Condition	3.24	4083	1974-02-19	condition-22	5.62	8
+covers/decide-29.png	29	3979043097247	Decide	4.02	8325	2017-01-31	decide-29	6.80	5
+covers/behavior-24.png	24	2022003021764	Behavior	9.17	8262	1991-05-20	behavior-24	4.67	3
+covers/real-16.png	16	6278922515060	Real	5.11	7783	2002-06-18	real-16	3.00	1
+covers/easy-14.png	14	4297654223370	Easy	5.78	9471	1980-06-16	easy-14	4.00	5
+covers/agree-4.png	4	8387861981419	Agree	9.62	2597	2003-08-13	agree-4	2.00	5
+covers/should-25.png	25	4417360485720	Should	2.72	8148	2020-12-17	should-25	5.75	4
+covers/suffer-30.png	30	1323464722501	Suffer	4.13	5465	1999-03-28	suffer-30	6.17	6
+covers/hit-19.png	19	0833134586533	Hit	2.81	4888	2018-01-26	hit-19	3.57	7
+covers/try-12.png	12	2443083472645	Try	7.32	2790	1998-12-24	try-12	7.20	5
+covers/community-27.png	27	5837883462638	Community	8.88	9200	2003-11-22	community-27	7.00	4
+covers/serve-15.png	15	7536153798094	Serve	1.20	7754	2009-01-18	serve-15	5.50	8
+covers/another-23.png	23	6918792100979	Another	2.40	5045	2002-07-19	another-23	8.00	3
+covers/notice-8.png	8	9287391152259	Notice	6.74	8868	2019-03-03	notice-8	4.25	4
+covers/number-9.png	9	0460843795630	Number	8.95	2663	2011-07-21	number-9	5.00	9
 \.
 
 
@@ -796,36 +840,36 @@ covers/above-28.png	28	8338300492584	Above	5.01	4965	2014-05-03	2.16	above-28
 --
 
 COPY public.catalog_book_author (id, book_id, author_id) FROM stdin;
-1	1	10
-2	2	8
-3	3	9
-4	4	9
+1	1	5
+2	2	1
+3	3	10
+4	4	4
 5	5	8
-6	6	8
-7	7	3
-8	8	6
-9	9	10
-10	10	8
-11	11	8
-12	12	6
-13	13	9
-14	14	10
+6	6	9
+7	7	1
+8	8	5
+9	9	8
+10	10	6
+11	11	3
+12	12	1
+13	13	10
+14	14	5
 15	15	3
-16	16	7
-17	17	5
-18	18	10
-19	19	7
-20	20	8
-21	21	5
-22	22	7
-23	23	7
+16	16	3
+17	17	2
+18	18	6
+19	19	9
+20	20	1
+21	21	7
+22	22	5
+23	23	9
 24	24	9
 25	25	2
-26	26	2
-27	27	7
-28	28	1
-29	29	2
-30	30	5
+26	26	1
+27	27	2
+28	28	8
+29	29	10
+30	30	9
 \.
 
 
@@ -834,46 +878,216 @@ COPY public.catalog_book_author (id, book_id, author_id) FROM stdin;
 --
 
 COPY public.catalog_comment (id, date, msg, book_id, user_id) FROM stdin;
-1	2021-12-21 20:59:05.154456+01	Source dog kind stock the determine. Through plant teach difficult party. Story decade word TV enter contain today. Your maybe the there politics college.	18	6
-2	2021-12-21 20:59:05.162853+01	Life security worker by. Politics win third yourself story.	22	8
-3	2021-12-21 20:59:05.170853+01	Media establish during newspaper. Occur minute easy send name. Step decision test performance yard public.	4	2
-4	2021-12-21 20:59:05.179121+01	Affect like party. Program away factor try beautiful maintain Republican.\nOffice street at resource.\nProbably develop term. Level describe music reveal third for attention too.	17	11
-5	2021-12-21 20:59:05.187465+01	Drop building several. Professor decision whose give approach environment.\nGuess security hot heavy. Institution him meeting. Hundred wait study animal send major.	28	15
-6	2021-12-21 20:59:05.19599+01	Space event travel. Woman central apply small play need the.\nLate first morning board partner company with same. Foot soldier say. Left country almost base down husband become.	4	5
-7	2021-12-21 20:59:05.204291+01	Piece save not letter raise someone who. Send system same tax down hit several. Dog ask third.\nPower imagine nor. As field first.	9	20
-8	2021-12-21 20:59:05.212721+01	Ready international energy out job board. Many thing high suggest wait debate. Blue together group site student hour responsibility provide.	22	20
-9	2021-12-21 20:59:05.220829+01	Half listen strong blue however gun. Mrs station these represent major central system doctor.	27	15
-10	2021-12-21 20:59:05.229705+01	Within recognize Democrat trip. A also really pattern. Respond financial reflect tell account none population admit.	27	11
-11	2021-12-21 20:59:05.237643+01	Trade key affect indicate for person. Carry past born technology up.\nReturn ten hit article. Yard clearly special thousand.	26	6
-12	2021-12-21 20:59:05.246435+01	Room single myself major future television. Development full you computer join number.\nTwo theory on series.\nMother help too voice. Yourself or list go talk. Writer unit rock view visit help.	21	19
-13	2021-12-21 20:59:05.254095+01	Water represent interview character general. Official often tend white mention.\nThus own while relate answer game. Final someone operation form approach group. Against bill leader type reach feeling.	3	21
-14	2021-12-21 20:59:05.262793+01	Popular listen perhaps hand. Audience administration vote the country store.\nImprove school since speech book life. Adult other conference what guy.	5	15
-15	2021-12-21 20:59:05.270795+01	Entire generation act. School necessary order some. East yeah get no write movie much.	24	6
-16	2021-12-21 20:59:05.279101+01	Huge itself character decade indeed detail. Modern fill item fight push health herself. Protect world system pick. Investment street understand phone shoulder left.	5	6
-17	2021-12-21 20:59:05.287343+01	Wall man generation realize choose before. Soldier rather bill huge part. Situation stay ask join information question issue mind.	13	12
-18	2021-12-21 20:59:05.296149+01	Industry green risk college page. Quickly lay two than live ability. North plant identify manager.\nPerhaps scene experience who across. Need sell protect performance memory.	26	10
-19	2021-12-21 20:59:05.304363+01	Fire put sound area way inside. Police force theory short million door off economic. Break exist determine song.\nMean discussion kid list off anything board.\nDefense family his big environment.	6	10
-20	2021-12-21 20:59:05.312684+01	Recently though who seven. Idea together land sister west meeting.\nToday position successful military especially. Officer fast to recognize do personal.	4	2
-21	2021-12-21 20:59:05.320815+01	Land growth number hundred anything program.\nLand may size I financial. Hear list poor policy.	12	11
-22	2021-12-21 20:59:05.329945+01	Law we will. Bag glass he choose note table. American poor sound hand wide.	15	15
-23	2021-12-21 20:59:05.337936+01	Develop without individual huge nothing song. Room federal thing PM.\nSometimes although painting painting smile. Beautiful reduce price point. Dark role center amount much network.	6	18
-24	2021-12-21 20:59:05.346645+01	Civil feeling brother around action. Cover attention nature town.\nDifference decade no drug. Agent water best speech meet movement.\nAmount begin center a. Per together huge idea.	7	15
-25	2021-12-21 20:59:05.353971+01	Whom pick improve subject. Why foot ten hair far. Include pressure forget condition half trade.	23	10
-26	2021-12-21 20:59:05.362957+01	Simple city become line deep in ball kitchen. Happen improve case defense bag inside issue.\nLeft sense point challenge nation. Good try us interesting certainly pick. Likely seat scene fly.	19	7
-27	2021-12-21 20:59:05.371079+01	Choice Republican fund produce some close. Indeed commercial call glass serve.	27	3
-28	2021-12-21 20:59:05.379451+01	Lawyer walk any. Such lead example attention tell forget onto. Their back upon name.	24	4
-29	2021-12-21 20:59:05.387769+01	Reduce standard real as provide. Clear theory tend share.\nRecord within live. Allow sell wind. Plan official run color area three style talk. Light father seek wait less catch.	21	21
-30	2021-12-21 20:59:05.395979+01	Step large allow measure station. Several say medical region space.\nBit building seat discuss some. Find commercial discuss.\nPretty right can. Agreement option like.	1	3
-31	2021-12-21 20:59:05.404346+01	Security moment why yes soon record rather. None out up again attention contain protect.\nCapital million discussion. Time teach him leave agent.	21	7
-32	2021-12-21 20:59:05.412829+01	Close different different article. Seem prove maintain industry occur.\nBy now hour radio focus factor.\nReason team camera throw past force. Site economy off game. Student arrive different.	13	18
-33	2021-12-21 20:59:05.421004+01	Approach military quickly several weight rate beyond.\nKeep bar hair main career. Model tax bar need scene account. Size two structure. Western current attack relate fish behavior understand.	15	3
-34	2021-12-21 20:59:05.429811+01	Same material compare. Everybody according role alone middle scene either would.\nAlso exist subject kid wait understand by.\nModel chance reality manager every land. You fight member suggest us Mrs.	15	3
-35	2021-12-21 20:59:05.437862+01	Study current claim suffer exist. Yourself half seat security Congress affect. Game base plan contain also.\nOil science mind decision enter. Than Congress leader reality task low second.	7	19
-36	2021-12-21 20:59:05.446305+01	Five follow group surface home environmental. Character reflect summer we.	10	3
-37	2021-12-21 20:59:05.45432+01	Result party especially center popular kitchen surface. Develop tonight analysis race example probably price.	1	14
-38	2021-12-21 20:59:05.463519+01	War rate system position. End ground surface design.\nSide along law hundred.\nSome important right return tend return your. Dark despite approach seek him ok though military.	3	6
-39	2021-12-21 20:59:05.471036+01	He anything food attention. Fear political medical movie family why.\nMaterial key believe serious audience call give. Bad organization material plan particular. Thing region year fire seem yard.	11	20
-40	2021-12-21 20:59:05.479898+01	Design political idea easy seem. Owner he natural against lose relate writer. Beat understand fear something again forget heavy child.	13	8
+1	2022-06-10 21:17:56.15117+02	Develop go rich modern analysis through. We area learn. Paper strong TV rich near.\nTechnology each modern voice. Save usually action two treat. Oil behavior guy behind forget book kitchen.	2	21
+2	2022-06-10 21:17:56.153624+02	Idea although trade manager. Movement decide whom carry alone line success. Late any provide near eat mention. Bill old resource under accept the.	8	11
+3	2022-06-10 21:17:56.155723+02	Return bar lay senior fear.\nPossible serious stock. Animal per shake discuss pick sound. Summer line away safe site country.\nDifficult born support after.	7	11
+4	2022-06-10 21:17:56.157773+02	Hotel later prevent role area American call. Beyond activity also field thank. Call phone position true.	29	8
+5	2022-06-10 21:17:56.159757+02	Environmental wind cup. Very building certainly list officer environment. Social green hour why song provide. Life medical generation city system themselves.	17	9
+6	2022-06-10 21:17:56.161741+02	Central discover plant media something state training. Piece give inside may country.\nDebate yourself the character.\nBetter church environmental tough and religious. Kitchen individual however.	21	7
+7	2022-06-10 21:17:56.163666+02	Grow director send crime part. Specific activity seven fast loss our. Discuss its center eight management.\nManage though win they. Success onto than can girl.	22	14
+8	2022-06-10 21:17:56.165616+02	Must pass best hot smile. Now respond son sell special. Bank east wind politics during.\nChoose out seem next along school. Mr behind red lawyer ask medical miss.	16	5
+9	2022-06-10 21:17:56.167583+02	Authority accept citizen huge especially heart. Billion choice help successful. Significant government cell.\nFigure civil real three second son finally. Meet season education goal local shake.	5	8
+10	2022-06-10 21:17:56.169571+02	Take dog food lay if. Own little natural situation different. Night soldier reduce win probably.	7	3
+11	2022-06-10 21:17:56.171556+02	Various result everyone else protect teach listen. Able bar hotel suffer. Media else quite budget light town.	8	5
+12	2022-06-10 21:17:56.173755+02	Generation which quite check inside generation though. Individual break both leave ever collection speech interest. Note pay tax.	10	12
+13	2022-06-10 21:17:56.175991+02	Decide appear significant finally. My stay another fly. Lawyer east source want.\nAbove kid he fight same may nature. Another structure culture from listen prove success.	28	10
+14	2022-06-10 21:17:56.17799+02	Against street every outside painting those hot. Finish stop citizen peace.\nDown receive loss us five. Pretty position boy establish help.	16	7
+15	2022-06-10 21:17:56.180012+02	Soon easy opportunity head matter include food. High take control.\nBecome piece or notice. News lead beyond. Whole shake eye throughout letter operation.	17	18
+16	2022-06-10 21:17:56.181898+02	Peace determine spend into major father. Usually necessary course identify.\nRoom rule anything remain appear early. Recent among cut protect year professional resource.	18	15
+17	2022-06-10 21:17:56.183899+02	White action identify trouble seek first nature travel.\nSure first significant enter knowledge Mr computer.\nSuddenly wrong clear give technology teach successful.	15	6
+18	2022-06-10 21:17:56.185894+02	Player even phone billion someone. Student cover trade think sit consumer. Foreign your occur relate series statement enter.	1	15
+19	2022-06-10 21:17:56.187867+02	Its audience must traditional month. Measure along analysis go decade the player. Simple once condition I industry thousand against.\nSpring enjoy but crime. Age prevent resource.	14	2
+20	2022-06-10 21:17:56.193449+02	Thought style than she north line. Lay girl opportunity office receive life. Under investment forget likely so find voice.	18	3
+21	2022-06-10 21:17:56.200866+02	Nation ready claim herself. Success however book threat. Whatever guy very develop again.\nRelate space still. Call east article rise management thank.	25	12
+22	2022-06-10 21:17:56.209215+02	The focus image school. Fill treatment traditional enjoy impact set.\nKitchen serve yourself use. Project realize what research word begin.	7	9
+23	2022-06-10 21:17:56.21444+02	Take morning law adult party. Movement fear computer human begin analysis learn. Democrat time development various conference.\nMean seek chance. Something day policy population.	9	5
+24	2022-06-10 21:17:56.218611+02	Fast describe until news in suddenly. Bank case expect.\nUse partner thousand character. Natural wait building listen you of east. Part alone key worry business answer.	16	21
+25	2022-06-10 21:17:56.221857+02	Three our institution environmental everyone black play. Difference final audience north well head everyone increase.\nGas into get bank outside.	13	9
+26	2022-06-10 21:17:56.224736+02	Ahead skin audience follow successful side. Benefit down knowledge evidence mouth general. Hair whom world population several into.	6	5
+27	2022-06-10 21:17:56.227441+02	West course instead help public number. Seat skill area choice play. Detail opportunity gas fall.\nNor change cup anyone new. Bank read thought quality education doctor teacher. Develop center a.	13	21
+28	2022-06-10 21:17:56.230152+02	Short politics hand movement. Himself early Mrs speak phone.\nToward poor agree back under ok. Red agency again that early sign imagine.	28	20
+29	2022-06-10 21:17:56.232868+02	Health audience hospital. Develop radio whether they modern store.\nTown including front ready chance. Challenge direction serve modern scene deal. Wife personal hold news necessary other.	16	10
+30	2022-06-10 21:17:56.235602+02	Player quality hotel TV person politics green. Admit guess throughout under should.\nCamera data stage how its. Send young doctor somebody large recognize.	14	17
+31	2022-06-10 21:17:56.238277+02	Benefit mission man mind.\nTheory hospital measure assume draw research. Candidate than tough old safe sell. Glass our third yet.	10	11
+32	2022-06-10 21:17:56.240945+02	Step mention tonight.\nPolitics professor rich. Industry effort yard explain computer receive teacher. Suddenly young tonight challenge.	30	11
+33	2022-06-10 21:17:56.243655+02	Compare sound test bank investment fly another. After six head town true politics idea. Send involve form law.\nTogether another sister medical team research.	28	15
+34	2022-06-10 21:17:56.246351+02	School conference word probably allow. State result agency enjoy. Art soon whom fund send.\nMachine turn night. Employee name in lead. Add attorney child guy white.	6	5
+35	2022-06-10 21:17:56.248995+02	Recent system science call position else. Not trial never. Part provide explain hot.\nEvery thus area sport go. Chair every person house television cause. Generation raise pull may science have.	14	3
+36	2022-06-10 21:17:56.252628+02	Heavy generation nation soldier save present understand into. Hit family join agree. Threat part certainly instead scientist. Bank candidate evening walk benefit.	23	2
+37	2022-06-10 21:17:56.256288+02	Above both yet visit look necessary. Camera detail body. Treat war around whether able form.\nPopular near city. Strong question must structure.	19	12
+38	2022-06-10 21:17:56.259953+02	Enjoy investment food parent information. Price rate building follow dark. Require know attorney spend remember right.	26	14
+39	2022-06-10 21:17:56.262902+02	Question ten if present. Discuss hand include list present might kitchen. Answer nothing foot.\nInclude class green give. Middle nor me lead country.	2	15
+40	2022-06-10 21:17:56.26567+02	Care attorney certain performance break. Produce suggest stay. One significant gas south affect condition.\nHe fast Congress church person technology. Language how expect produce least.	21	16
+\.
+
+
+--
+-- Data for Name: catalog_vote; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.catalog_vote (id, rate, book_id, user_id) FROM stdin;
+1	5	21	8
+5	5	6	5
+6	2	9	6
+7	3	14	9
+8	5	15	18
+9	4	10	13
+10	5	8	15
+11	7	8	2
+13	9	20	7
+14	3	17	11
+15	8	10	15
+16	3	5	21
+18	0	21	2
+2	0	20	5
+20	5	1	8
+21	6	2	4
+22	1	4	2
+23	4	4	3
+25	6	9	21
+119	2	25	17
+28	6	30	4
+30	1	7	11
+31	8	23	2
+32	4	1	16
+33	1	4	8
+34	3	14	5
+36	10	27	13
+106	9	1	6
+37	9	25	19
+38	5	25	15
+39	5	17	6
+41	10	30	12
+45	3	21	13
+46	5	14	20
+47	1	7	12
+50	2	13	3
+51	5	1	9
+52	9	17	16
+53	7	2	21
+55	7	12	17
+56	4	10	11
+57	3	16	14
+58	4	27	14
+59	2	11	14
+60	3	18	5
+44	2	11	13
+26	5	17	4
+29	0	8	14
+64	5	13	10
+65	7	10	19
+66	4	29	11
+67	10	10	14
+68	10	11	12
+69	5	6	9
+117	4	21	14
+71	0	19	16
+72	4	15	5
+73	4	12	16
+70	8	20	2
+24	2	13	11
+74	10	22	5
+75	10	17	14
+76	8	11	3
+12	9	17	2
+78	7	19	11
+80	2	19	4
+81	7	15	3
+82	4	27	21
+83	3	4	7
+127	6	26	3
+84	0	26	18
+85	9	20	13
+43	0	5	4
+19	7	2	12
+4	0	18	8
+87	6	9	14
+62	9	7	20
+88	0	9	4
+49	8	24	14
+54	9	22	16
+89	1	28	21
+90	4	9	5
+91	9	13	15
+92	2	26	10
+93	0	22	14
+94	1	4	5
+95	4	9	9
+96	1	21	15
+97	4	6	11
+99	4	14	13
+100	9	29	3
+118	6	1	20
+101	7	7	6
+102	6	23	13
+103	3	20	12
+104	4	26	16
+105	3	15	17
+107	8	3	2
+108	9	28	6
+40	10	6	13
+86	8	9	2
+109	0	20	19
+110	1	22	11
+61	9	30	2
+111	5	24	15
+63	7	30	6
+113	7	1	4
+114	1	13	9
+115	10	22	3
+116	6	13	21
+27	5	9	19
+120	0	15	15
+79	3	22	19
+121	10	23	8
+123	8	11	9
+124	1	19	13
+125	4	26	11
+126	6	15	21
+98	10	21	16
+77	1	21	3
+128	6	28	16
+129	5	3	15
+35	0	19	15
+130	10	20	8
+131	3	26	21
+132	2	10	10
+133	7	12	11
+112	5	8	7
+134	1	24	13
+3	9	18	10
+42	3	29	14
+48	7	25	10
+17	8	2	16
+135	5	14	4
+122	8	3	4
+136	3	1	19
+137	9	22	20
+138	1	3	8
+139	5	30	11
+140	1	28	20
+141	10	9	20
+143	8	29	6
+144	3	1	7
+145	10	3	13
+146	8	17	18
+147	0	6	14
+148	1	18	9
+149	9	28	14
+150	2	7	19
+151	5	13	17
+152	4	7	15
+153	10	12	19
+154	6	11	5
+155	3	22	12
+142	10	29	17
+156	6	19	2
+157	0	30	18
+158	9	19	18
+159	9	15	16
+160	8	12	18
+161	10	27	2
+162	10	15	7
 \.
 
 
@@ -899,8 +1113,9 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 7	catalog	author
 8	catalog	book
 9	catalog	comment
-10	orders	order
-11	orders	orderitem
+10	catalog	vote
+11	orders	order
+12	orders	orderitem
 \.
 
 
@@ -909,26 +1124,32 @@ COPY public.django_content_type (id, app_label, model) FROM stdin;
 --
 
 COPY public.django_migrations (id, app, name, applied) FROM stdin;
-1	contenttypes	0001_initial	2021-12-21 20:58:40.465612+01
-2	auth	0001_initial	2021-12-21 20:58:41.386477+01
-3	admin	0001_initial	2021-12-21 20:58:41.578204+01
-4	admin	0002_logentry_remove_auto_add	2021-12-21 20:58:41.596978+01
-5	admin	0003_logentry_add_action_flag_choices	2021-12-21 20:58:41.61026+01
-6	contenttypes	0002_remove_content_type_name	2021-12-21 20:58:41.637232+01
-7	auth	0002_alter_permission_name_max_length	2021-12-21 20:58:41.65241+01
-8	auth	0003_alter_user_email_max_length	2021-12-21 20:58:41.671409+01
-9	auth	0004_alter_user_username_opts	2021-12-21 20:58:41.68698+01
-10	auth	0005_alter_user_last_login_null	2021-12-21 20:58:41.704538+01
-11	auth	0006_require_contenttypes_0002	2021-12-21 20:58:41.71163+01
-12	auth	0007_alter_validators_add_error_messages	2021-12-21 20:58:41.729591+01
-13	auth	0008_alter_user_username_max_length	2021-12-21 20:58:41.803555+01
-14	auth	0009_alter_user_last_name_max_length	2021-12-21 20:58:41.821399+01
-15	auth	0010_alter_group_name_max_length	2021-12-21 20:58:41.836546+01
-16	auth	0011_update_proxy_permissions	2021-12-21 20:58:41.854101+01
-17	auth	0012_alter_user_first_name_max_length	2021-12-21 20:58:41.871008+01
-18	catalog	0001_initial	2021-12-21 20:58:42.462325+01
-19	orders	0001_initial	2021-12-21 20:58:42.737383+01
-20	sessions	0001_initial	2021-12-21 20:58:42.912454+01
+1	contenttypes	0001_initial	2022-06-10 21:17:48.401989+02
+2	auth	0001_initial	2022-06-10 21:17:48.451515+02
+3	admin	0001_initial	2022-06-10 21:17:48.465408+02
+4	admin	0002_logentry_remove_auto_add	2022-06-10 21:17:48.471793+02
+5	admin	0003_logentry_add_action_flag_choices	2022-06-10 21:17:48.477438+02
+6	contenttypes	0002_remove_content_type_name	2022-06-10 21:17:48.489224+02
+7	auth	0002_alter_permission_name_max_length	2022-06-10 21:17:48.495235+02
+8	auth	0003_alter_user_email_max_length	2022-06-10 21:17:48.502071+02
+9	auth	0004_alter_user_username_opts	2022-06-10 21:17:48.5077+02
+10	auth	0005_alter_user_last_login_null	2022-06-10 21:17:48.514757+02
+11	auth	0006_require_contenttypes_0002	2022-06-10 21:17:48.51615+02
+12	auth	0007_alter_validators_add_error_messages	2022-06-10 21:17:48.522707+02
+13	auth	0008_alter_user_username_max_length	2022-06-10 21:17:48.531079+02
+14	auth	0009_alter_user_last_name_max_length	2022-06-10 21:17:48.536986+02
+15	auth	0010_alter_group_name_max_length	2022-06-10 21:17:48.543909+02
+16	auth	0011_update_proxy_permissions	2022-06-10 21:17:48.550247+02
+17	auth	0012_alter_user_first_name_max_length	2022-06-10 21:17:48.556107+02
+18	catalog	0001_initial	2022-06-10 21:17:48.591954+02
+19	catalog	0002_auto_20220610_1123	2022-06-10 21:17:48.610474+02
+20	catalog	0003_alter_vote_rate	2022-06-10 21:17:48.618561+02
+21	catalog	0004_alter_vote_rate	2022-06-10 21:17:48.626327+02
+22	catalog	0005_auto_20220610_1437	2022-06-10 21:17:48.639236+02
+23	catalog	0006_alter_book_score	2022-06-10 21:17:48.644404+02
+24	catalog	0007_book_n_votes	2022-06-10 21:17:48.649814+02
+25	orders	0001_initial	2022-06-10 21:17:48.676693+02
+26	sessions	0001_initial	2022-06-10 21:17:48.688326+02
 \.
 
 
@@ -974,7 +1195,7 @@ SELECT pg_catalog.setval('public.auth_group_permissions_id_seq', 1, false);
 -- Name: auth_permission_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.auth_permission_id_seq', 44, true);
+SELECT pg_catalog.setval('public.auth_permission_id_seq', 48, true);
 
 
 --
@@ -988,7 +1209,7 @@ SELECT pg_catalog.setval('public.auth_user_groups_id_seq', 1, false);
 -- Name: auth_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.auth_user_id_seq', 21, true);
+SELECT pg_catalog.setval('public.auth_user_id_seq', 22, true);
 
 
 --
@@ -1027,6 +1248,13 @@ SELECT pg_catalog.setval('public.catalog_comment_id_seq', 40, true);
 
 
 --
+-- Name: catalog_vote_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.catalog_vote_id_seq', 162, true);
+
+
+--
 -- Name: django_admin_log_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
@@ -1037,14 +1265,14 @@ SELECT pg_catalog.setval('public.django_admin_log_id_seq', 1, false);
 -- Name: django_content_type_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_content_type_id_seq', 11, true);
+SELECT pg_catalog.setval('public.django_content_type_id_seq', 12, true);
 
 
 --
 -- Name: django_migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
 --
 
-SELECT pg_catalog.setval('public.django_migrations_id_seq', 20, true);
+SELECT pg_catalog.setval('public.django_migrations_id_seq', 26, true);
 
 
 --
@@ -1203,6 +1431,14 @@ ALTER TABLE ONLY public.catalog_book
 
 ALTER TABLE ONLY public.catalog_comment
     ADD CONSTRAINT catalog_comment_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: catalog_vote catalog_vote_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_vote
+    ADD CONSTRAINT catalog_vote_pkey PRIMARY KEY (id);
 
 
 --
@@ -1374,6 +1610,20 @@ CREATE INDEX catalog_comment_user_id_30926d6e ON public.catalog_comment USING bt
 
 
 --
+-- Name: catalog_vote_book_id_74db257a; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX catalog_vote_book_id_74db257a ON public.catalog_vote USING btree (book_id);
+
+
+--
+-- Name: catalog_vote_user_id_f0a52bea; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX catalog_vote_user_id_f0a52bea ON public.catalog_vote USING btree (user_id);
+
+
+--
 -- Name: django_admin_log_content_type_id_c4bce8eb; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -1501,6 +1751,22 @@ ALTER TABLE ONLY public.catalog_comment
 
 ALTER TABLE ONLY public.catalog_comment
     ADD CONSTRAINT catalog_comment_user_id_30926d6e_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: catalog_vote catalog_vote_book_id_74db257a_fk_catalog_book_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_vote
+    ADD CONSTRAINT catalog_vote_book_id_74db257a_fk_catalog_book_id FOREIGN KEY (book_id) REFERENCES public.catalog_book(id) DEFERRABLE INITIALLY DEFERRED;
+
+
+--
+-- Name: catalog_vote catalog_vote_user_id_f0a52bea_fk_auth_user_id; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.catalog_vote
+    ADD CONSTRAINT catalog_vote_user_id_f0a52bea_fk_auth_user_id FOREIGN KEY (user_id) REFERENCES public.auth_user(id) DEFERRABLE INITIALLY DEFERRED;
 
 
 --
