@@ -22,7 +22,7 @@ Una vez explicado esto pasaremos a explicar las páginas mas relevantes como son
 
 ## Book detail 
 
-Esta pantalla se encarga de mostrarnos la información de un libro, asi como permitirnos añadirlo al carrito mediante un campo que va desde el 1 al 99 para elegir la cantidad de unidades que queramos añadir. Si añadimos libros nos lleva a la pagina cart para ver un resumen de lo que llevamos comprado.
+Esta pantalla se encarga de mostrarnos la información de un libro, asi como permitirnos añadirlo al carrito mediante un campo que va desde el 1 al 99 para elegir la cantidad de unidades que queramos añadir y un campo que va desde el 0 al 10 para votarlo una vez votemos el libro nos dirigira a la pagina home para que elijamos otro libro para votar que nos parece. Si añadimos libros nos lleva a la pagina cart para ver un resumen de lo que llevamos comprado.
 
 ## Cart 
 
