@@ -2,7 +2,6 @@ from django.shortcuts import redirect, render
 from django.views import generic
 from django.shortcuts import get_object_or_404
 from django.db.models import Q
-from django.http import HttpResponseRedirect
 
 from catalog.forms import VoteAddToBook
 
@@ -66,7 +65,7 @@ class BookListView(generic.ListView):
 
 
 def UserVote(request, slug):
-    vote = Vote(request)
+    Vote(request)
     if request.method == 'POST':
         form = VoteAddToBook(request.POST)
         if form.is_valid():
